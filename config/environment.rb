@@ -1,3 +1,9 @@
+require 'rake'
+require 'active_record'
+require 'rest-client'
+require 'json'
+require 'pry'
+
 require 'bundler'
 Bundler.require
 
