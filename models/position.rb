@@ -1,2 +1,2 @@
-class Position < ActiveRecord::Base
-end
+# class Position < ActiveRecord::Base
+# end

@@ -1,4 +1,6 @@
 require_relative '../config/environment.rb'
+require 'rest-client'
+require 'json'
 
 def get_teams
   # returns an array of MLB Team ID's (as per MLB API)
@@ -17,10 +19,11 @@ def get_teams
 end
 
 def get_players(team_ids)
+  binding.pry
   # Call team rosters. Return array of players
 
   url = "http://lookup-service-prod.mlb.com/json/named.roster_40.bam?team_id="
-  players = []
+  player_data_hashes = []
   
   team_ids.each do |id| 
     response_string = RestClient.get(url + id)
@@ -28,33 +31,70 @@ def get_players(team_ids)
 
     # iterate over team_ids. push to player_ids  
     response_hash["roster_40"]["queryResults"]["row"].each do |player|
-      players << {
+      player_data_hashes << {
         mlb_player_id: player["player_id"],
         name: player["name_display_first_last"],
-        position: player["position_txt"]
+        position: player["position_txt"],
+        team: player["team_name"]
     }
     end
   end
   
-  # be sure to return player_ids
-  binding.pry  
-  players
+  # be sure to return player_ids 
+  binding.pry
+  player_data_hashes
 end
 
-def get_player_stats(player_ids)
+
+
+def add_stats_to_player_hashes(player_data_hashes)
+  binding.pry
   # get season hitting stats data by player id. Return as a hash, ready to store in db
-  
+  #takes in an array of hashes not player objects
   # In this instance, we are hard coding 2019. Could parse for interporlation, in the future 
   url = "http://lookup-service-prod.mlb.com/json/named.sport_hitting_tm.bam?league_list_id='mlb'&game_type='R'&season='2019'&player_id="
-  player_stats = {}
+  
+  counter = 0
 
-  player_ids.each do |id|
-    response_string = RestClient.get(url + id)
+  player_data_hashes.each do |player|
+    counter +=1
+    response_string = RestClient.get(url + player[:mlb_player_id])
     response_hash = JSON.parse(response_string)
+    # binding.pry 
+    # handling for when player has no hitting stats
+    
+    result = response_hash["sport_hitting_tm"]["queryResults"]["row"]
+    
+    # first ensure result is truthy
+    if !!result
+
+      # then handle for variations in the data formatting
+      if result.class == Array
+      
+        # this is a sub-optimal solution that grabs stats only from a players stint on the team the ended the season with. We will refactor this down the road
+        player[:avg] = result.last["avg"]
+        player[:hr] = result.last["hr"]
+        player[:h] = result.last["h"]
+        player[:rbi] = result.last["rbi"]
+        player[:ops] = result.last["ops"]
+        # puts "#{counter}. From Array: #{player}"
+
+      elsif result.class == Hash
+        player[:avg] = result["avg"]
+        player[:hr] = result["hr"]
+        player[:h] = result["h"]
+        player[:rbi] = result["rbi"]
+        player[:ops] = result["ops"]
+        # puts "#{counter}. From Hash: #{player}"
+      else
+        # puts "#{counter}. BLARG!"
+      end
+    end
   end
-
-
+  # player_data_hashes
 end
 
-
-get_players(get_teams))
+# uncomment the following line for testing this file alone
+# teams = get_teams
+# players = get_players(teams)
+# add_stats_to_player_hashes(players)
