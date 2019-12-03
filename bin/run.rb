@@ -2,9 +2,11 @@ require_relative '../config/environment'
 
 
 
-puts "HELLO WORLD"
+puts "Welcome to StatsExplorer"
 # Welcome message
 # run cli
-player_hash = get_players_from_api
 
-# binding.pry
+
+binding.pry
+
+run 
