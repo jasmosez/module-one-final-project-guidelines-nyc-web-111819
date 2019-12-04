@@ -131,8 +131,6 @@ def primary_menu(user)
     when "Exit"
       exit
     end
-
-
 end
 
 def run
@@ -141,12 +139,13 @@ def run
   user = login_validation(email) # returns user object once successful
   login_success(user)
   while true 
+    # binding.pry
     primary_menu(user) 
-    binding.pry
   end
 end
 
 def select_position_menu(user)
+  # Note that we are not offering the possibility to browse OF"
   response = PROMPT.select("Which position(s) do you want to scout?", POSITION_HASH)
   player_view(user, response) 
 end
@@ -156,6 +155,7 @@ def player_view(user, position)
   # what is the default sorting? == Hits Descending
   # Are there additional sorting options == Not for MVP
   # QUESTION: how to include a "back" option
+  
   
   # initialize new hash 
   choices = {}
@@ -167,13 +167,16 @@ def player_view(user, position)
   end
 
   # Prompt user to select a player
-  selection = PROMPT.select("Select your player | position | hits | homers | RBI's | AVG | OPS", choices)
+  # Do we want this to be a multi-select
+  selection = PROMPT.select("Select Your Player | Position | Hits | Homeruns | RBI | AVG | OPS", choices)
   
+  # Insert validation to ensure we haven't already selected this player
+
   # Assign selected player to wishlist
   assign_player_to_wishlist(user, selection)
   
   # Prompt user to decide what to do next
-  # intermediate menu
+  # intermediate menu? or back to main menu
 
 end 
 
@@ -181,7 +184,8 @@ def assign_player_to_wishlist(user, selection)
   Wish.create(
     player_id: selection, 
     wishlist_id: user.wishlists.first.id, 
-    position: assign_position(selection)
+    position: assign_position(selection),
+    rank: user.wishlists.first.wishes.length + 1
     )
 end 
 
@@ -195,15 +199,153 @@ def assign_position(selection)
   end
 
   # prompt user to assign position and return it
-  # TO FIX. Have menu options be full position name (not just shorthand string)
+  # TO FIX. 
+  # 1. Have menu options be full position name (not just shorthand string)
+  # 2. Not accounting for OF
   position_selection = PROMPT.select("Which position would you like to assign your player?", position_group) 
 end 
 
 def wishlist_view(user)
+  # Render wishlist 
+  render_wishlist(user)
+  wishlist_menu(user)
 end
 
+def render_wishlist(user)
+  wishes = user.wishlists.first.wishes
+  wishes.to_a
+  sorted_wishes = wishes.sort {|a, b| 
+    # binding.pry
+    a.rank <=> b.rank
+  }
+  
+  puts "Player | Position | Hits | Homeruns | RBI | AVG | OPS"
+  
+    sorted_wishes.each do |wish|
+      z = wish.player
+      puts "#{wish.rank}. #{z.name} | #{wish.position} | #{z.h} | #{z.hr} | #{z.rbi} | #{z.avg} | #{z.ops} | #{z.team}"
+    end
+end
+
+def wishlist_menu(user)  
+  puts "WISHLIST MENU"
+  sleep(0.5)
+  selection = PROMPT.select("What do you want to do with your list?") do |menu|
+    # Re-order (change rank)
+    menu.choice "Re-rank Player(s)"
+    # Re-assign position
+    menu.choice "Re-assign Position(s)"
+    # Remove a player from wishlist --> are you sure?
+    menu.choice "Drop Player(s)"
+    # STRETCH: Ability to search and add a player
+    # STRETCH: Wipe entire wishlist --> are you sure? --> for real?
+    # Back to Main Menu
+    menu.choice "Back to Main Menu"
+  end
+
+  case selection 
+  when "Re-rank Player(s)"
+    rerank_players(user)
+  when "Re-assign Position(s)"
+    reassign_positions(user)
+  when "Drop Player(s)"
+    drop_player(user)
+    #DESTROY wish 
+  when "Back to Main Menu"
+  end
+end
+
+def drop_player(user)
+  wishes = user.wishlists.first.wishes
+  selection = PROMPT.ask("Choose a player to drop by their rank number (1 to #{wishes.length}):") 
+  selection = selection.to_i
+  # find wish with rank of selection
+  player_wish = wishes.find do 
+    |wish| wish.rank == selection
+  end
+  player_wish.destroy 
+  deleted_rank = player_wish.rank
+  wishes.each do |wish|
+    if wish.rank > deleted_rank
+      wish.rank -= 1
+      wish.save
+    end
+  end 
+  binding.pry 
+end 
+def reassign_positions(user)
+  wishes = user.wishlists.first.wishes
+  selection = PROMPT.ask("Choose a player to re-assign their position by their rank number (1 to #{wishes.length}):")
+  selection = selection.to_i
+  # find wish with rank of selection
+  player_wish = wishes.find do 
+    |wish| wish.rank == selection
+  end
+  player_id = player_wish.player_id 
+  new_position = assign_position(player_id)
+  player_wish.position = new_position
+  player_wish.save  
+  #takes in a player_id and returns the position you will assign it to  
+   # re-render wishlist with changes
+  render_wishlist(user)
+  #re-call wishlist nav
+  wishlist_menu(user)
+  binding.pry 
+end 
+
+def rerank_players(user)
+  wishes = user.wishlists.first.wishes
+
+  selection = PROMPT.ask("Choose a player to re-rank by their rank number (1 to #{wishes.length}):")
+  selection = selection.to_i
+  # NEED TO force validation of selection (to be within the proper range)
+
+  # find wish with rank of selection
+  player_wish = wishes.find do 
+    |wish| wish.rank == selection
+  end
+
+  new_rank = PROMPT.ask("What do you want to rank #{player_wish.player.name} (1 to #{wishes.length})")
+  new_rank = new_rank.to_i
+  # NEED TO force validation of new rank
+  
+  # Depending on up-ranking or down-ranking, adjust all the other wishes that need adjusting (and save to db)
+  if new_rank < selection 
+    # selection is assigned to new_rank, and everything is shifted towards the back of array
+    wishes.each do |wish| 
+      if wish.rank < selection && wish.rank >= new_rank 
+        wish.rank += 1
+        wish.save
+      end
+    end
+  elsif new_rank > selection
+    wishes.each do |wish|
+      if wish.rank > selection && wish.rank <= new_rank
+        wish.rank -= 1
+        wish.save
+      end
+    end
+    
+  else 
+    puts "C'mon, look alive! Thats already their rank!"
+  end
+  
+  # assign new rank to selected wish and save to db
+  player_wish.rank = new_rank
+  player_wish.save
+
+  # re-render wishlist with changes
+  render_wishlist(user)
+  #re-call wishlist nav
+  wishlist_menu(user)
+end 
 
 def about_view(user)
+  binding.pry
+  # COMPLETE means at least three per position
+  # Credits
+  # For more advanced stats, check out these sites...
+
 end
 
 def clear_screen

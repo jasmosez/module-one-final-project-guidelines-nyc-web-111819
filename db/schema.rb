@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_12_03_145407) do
+ActiveRecord::Schema.define(version: 2019_12_04_154617) do
 
   create_table "players", force: :cascade do |t|
     t.string "mlb_player_id"
@@ -39,6 +39,7 @@ ActiveRecord::Schema.define(version: 2019_12_03_145407) do
     t.string "position"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "rank"
   end
 
   create_table "wishlists", force: :cascade do |t|
