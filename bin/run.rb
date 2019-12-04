@@ -2,4 +2,11 @@ require_relative '../config/environment'
 
 
 
-puts "HELLO WORLD"
+# puts "Welcome to StatsExplorer"
+# Welcome message
+# run cli
+
+
+# binding.pry
+
+run 
