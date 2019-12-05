@@ -171,24 +171,60 @@ class Cli
   end
 
   def self.player_view(user, position)
-    
-    # [see only one position-block at a time]
-    # what is the default sorting? == Hits Descending
-    # Are there additional sorting options == Not for MVP
-    # QUESTION: how to include a "back" option
-    
-    
-    # initialize new hash 
-    choices = {}
-    items = Player.where(position: position).order(h: :desc)
+  # [see only one position-block at a time]
+  # what is the default sorting? == Hits Descending
+  # Are there additional sorting options == Not for MVP
+  # QUESTION: how to include a "back" option
+  
+  
+  # initialize new hash 
+  choices = {}
+  items = Player.where(position: position).order(h: :desc)
 
-    items.each do |z|
-      #formatted string assign to key, player id assigned to value of choices hash
-      choices["#{z.name} | #{z.position} | #{z.h} | #{z.hr} | #{z.rbi} | #{z.avg} | #{z.ops} | #{z.team}"] = z.id   
+  items.each do |z|
+    #formatted string assign to key, player id assigned to value of choices hash
+    
+    #format NAME for columns
+    multiplier = 25 - z.name.length 
+    formatted_name = z.name + ' ' * multiplier
+
+    #format POSITION for columns
+    multiplier = 3 - z.position.length 
+    formatted_position = z.position + ' ' * multiplier
+
+    #format HITS for columns
+    multiplier = 3 - z.h.to_s.length 
+    formatted_h = z.h.to_s + ' ' * multiplier
+
+    #format HOMERUNS for columns
+    multiplier = 3 - z.hr.to_s.length 
+    formatted_hr = z.hr.to_s + ' ' * multiplier
+
+    #format RBIs for columns
+    multiplier = 3 - z.rbi.to_s.length 
+    formatted_rbi = z.rbi.to_s + ' ' * multiplier
+
+    #format AVG for columns
+    string_avg = z.avg.to_s.delete_prefix("0")
+    multiplier = 4 - string_avg.length 
+    formatted_avg = string_avg + '0' * multiplier
+    
+    #format OPS for columns
+    string_ops = z.ops.to_s
+    if string_ops[0] == "0"
+      string_ops = string_ops.delete_prefix("0")
+      multiplier = 4 - string_ops.length 
+      formatted_ops = ' ' + string_ops + '0' * multiplier
+    else
+      multiplier = 5 - string_ops.length 
+      formatted_ops = string_ops + '0' * multiplier
     end
 
-    # Prompt user to select a player
-    # Do we want this to be a multi-select
+    choices["#{formatted_name} | #{formatted_position} | #{formatted_h} | #{formatted_hr} | #{formatted_rbi} | #{formatted_avg} | #{formatted_ops} | #{z.team}"] = z.id   
+  end
+
+  # Prompt user to select a player
+  # Do we want this to be a multi-select
     clear_screen
     selection = PROMPT.select("Select Your Player | Position | Hits | Homeruns | RBI | AVG | OPS", choices, per_page: 35)
     
