@@ -1,47 +1,32 @@
 class Cli
 
   def self.run
-    welcome 
+    
+    welcome     
     email = login_prompt #returns user inputted email
     user = login_validation(email) # returns user object once successful
     # binding.pry
+    
     login_success(user)
+    
     while true 
       # binding.pry
       primary_menu(user) 
     end
   end
   
-  def self.welcome
-    clear_screen
-
-    puts ""
-    puts ""
-    puts ""
-    puts ""
-
-    puts '       d8888 888 888  .d8888b. 88888888888                        888888b.                              888               888 888'.colorize(:red)
-    puts '      d88888 888 888 d88P  Y88b    888                            888  "88b                             888               888 888'.colorize(:red)
-    puts '     d88P888 888 888 Y88b.         888                            888  .88P                             888               888 888'.colorize(:red)
-    puts '    d88P 888 888 888  "Y888b.      888   8888b.  888d888 88888888 8888888K.   8888b.  .d8888b   .d88b.  88888b.   8888b.  888 888'.colorize(:white)
-    puts '   d88P  888 888 888     "Y88b.    888      "88b 888P"      d88P  888  "Y88b     "88b 88K      d8P  Y8b 888 "88b     "88b 888 888'.colorize(:white)
-    puts '  d88P   888 888 888       "888    888  .d888888 888       d88P   888    888 .d888888 "Y8888b. 88888888 888  888 .d888888 888 888'.colorize(:white)
-    puts ' d8888888888 888 888 Y88b  d88P    888  888  888 888      d88P    888   d88P 888  888      X88 Y8b.     888 d88P 888  888 888 888'.colorize(:blue)
-    puts 'd88P     888 888 888  "Y8888P"     888  "Y888888 888     88888888 8888888P"  "Y888888  88888P"  "Y8888  88888P"  "Y888888 888 888'.colorize(:blue)
-                                                                                                                                
-    puts ""
-    puts ""
-    puts ""
-    puts ""                                                                                 
-                                                                                                                                                                                                                         
+  def self.welcome           
+                                                                                                                                                                                                              
     puts "Hey, Slugger! Welcome to AllSTarzBaseball"
   end
 
   def self.login_prompt
+    
     email = PROMPT.ask("Email:")
   end
 
   def self.login_validation(email)
+    
     # returns current User instance or 'nil'
     
     until !!User.find_by(email: email) 
@@ -69,6 +54,7 @@ class Cli
   end
 
   def self.register(email)
+    
     # prompt for your name
     name = PROMPT.ask("Hey, slugger! What's your full name?")
     # create a new user
@@ -80,12 +66,14 @@ class Cli
   end
 
   def self.login_success(user)
+    
      # returns current user instance 
     puts "Welcome, #{user.name}"
     status_message(wishlist_status(user))
   end 
 
   def self.wishlist_status(user)
+    
     # if the users wishlist is empty, then the status will be "empty"
     # if the users wishlist has 3 players per position filled, the status will be "complete"
     # otherwise, "incomplete"
@@ -103,7 +91,8 @@ class Cli
   end 
 
   def self.complete?(wishlist)
-    # positions = ["SS", "P", "1B", "3B", "C", "2B", "LF", "CF", "RF", "DH"]
+    
+
     
     POSITION_HASH.values.reduce do |bool, position|
       players_in_position = wishlist.wishes.select do |wish| 
@@ -117,6 +106,7 @@ class Cli
     clear_screen
     case status
     when "empty"
+      
       puts ""
       puts ""
       puts "Your list is empty!".colorize(:red)
@@ -124,6 +114,7 @@ class Cli
       puts ""
       puts ""
     when "incomplete"
+      
       puts ""
       puts ""
       puts "Your list is still in progress!".colorize(:yellow)
@@ -131,6 +122,7 @@ class Cli
       puts ""
       puts ""
     when "complete"
+      
       puts ""
       puts ""
       puts "Your list is ready!".colorize(:green) 
@@ -138,20 +130,25 @@ class Cli
       puts ""
       puts ""
     end
+    
   end
 
   def self.primary_menu(user)
+    
     # Primary Navigation Prompt
-      
+
+    puts ""
+    puts "MAIN MENU".colorize(:pink)  
       response = PROMPT.select("Where do you want to go?") do |menu|
           menu.choice "Browse and Select Players"
           menu.choice "View and Manage My List"
           menu.choice "Learn More About This App"
           menu.choice "Exit"
       end  
-
+      
       # case for user choice
       case response
+        
       when "Browse and Select Players"
         select_position_menu(user) #this in turn calls player_view
       when "View and Manage My List"
@@ -166,6 +163,7 @@ class Cli
  
 
   def self.select_position_menu(user)
+    
     clear_screen
     # Note that we are not offering the possibility to browse OF"
     response = PROMPT.select("Which position(s) do you want to scout?", POSITION_HASH, per_page: 11)
@@ -173,6 +171,7 @@ class Cli
   end
 
   def self.player_view(user, position)
+    
     # [see only one position-block at a time]
     # what is the default sorting? == Hits Descending
     # Are there additional sorting options == Not for MVP
@@ -204,6 +203,7 @@ class Cli
   end 
 
   def self.assign_player_to_wishlist(user, selection)
+    
     Wish.create(
       player_id: selection, 
       wishlist_id: user.wishlists.first.id, 
@@ -213,6 +213,7 @@ class Cli
   end 
 
   def self.assign_position(selection)
+    
     # binding.pry
     # give the option of appropriate field choices(an outfielder can only play outfield positions)
     mlb_position = Player.find(selection).position
@@ -240,12 +241,14 @@ class Cli
   end 
 
   def self.wishlist_view(user)
+    
     # Render wishlist 
     render_wishlist(user)
     wishlist_menu(user)
   end
 
   def self.render_wishlist(user)
+    
     wishes = user.wishlists.first.wishes
     wishes.to_a
     sorted_wishes = wishes.sort {|a, b| 
@@ -262,8 +265,8 @@ class Cli
   end
 
   def self.wishlist_menu(user)  
-    puts "WISHLIST MENU"
-    sleep(0.5)
+    puts ""
+    puts "WISHLIST MENU".colorize(:pink)
     selection = PROMPT.select("What do you want to do with your list?") do |menu|
       # Re-order (change rank)
       menu.choice "Re-rank Player(s)"
@@ -290,8 +293,9 @@ class Cli
   end
 
   def self.drop_player(user)
+    
     wishes = user.wishlists.first.wishes
-    selection = PROMPT.ask("Choose a player to drop by their rank number (1 to #{wishes.length}):") 
+    selection = PROMPT.ask("Choose a player to drop by their rank number (1 to #{wishes.length}):")  { |q| q.in("1-#{wishes.length}")}
     selection = selection.to_i
     # find wish with rank of selection
     player_wish = wishes.find do 
@@ -308,8 +312,9 @@ class Cli
     # binding.pry 
   end 
   def self.reassign_positions(user)
+    
     wishes = user.wishlists.first.wishes
-    selection = PROMPT.ask("Choose a player to re-assign their position by their rank number (1 to #{wishes.length}):")
+    selection = PROMPT.ask("Choose a player to re-assign their position by their rank number (1 to #{wishes.length}):")  { |q| q.in("1-#{wishes.length}")}
     selection = selection.to_i
     # find wish with rank of selection
     player_wish = wishes.find do 
@@ -328,9 +333,9 @@ class Cli
   end 
 
   def self.rerank_players(user)
+    
     wishes = user.wishlists.first.wishes
-
-    selection = PROMPT.ask("Choose a player to re-rank by their rank number (1 to #{wishes.length}):")
+    selection = PROMPT.ask("Choose a player to re-rank by their rank number (1 to #{wishes.length}):") { |q| q.in("1-#{wishes.length}")}
     selection = selection.to_i
     # NEED TO force validation of selection (to be within the proper range)
 
@@ -339,7 +344,7 @@ class Cli
       |wish| wish.rank == selection
     end
 
-    new_rank = PROMPT.ask("What do you want to rank #{player_wish.player.name} (1 to #{wishes.length})")
+    new_rank = PROMPT.ask("What do you want to rank #{player_wish.player.name} (1 to #{wishes.length})") { |q| q.in("1-#{wishes.length}")}
     new_rank = new_rank.to_i
     # NEED TO force validation of new rank
     
@@ -361,7 +366,9 @@ class Cli
       end
       
     else 
-      puts "C'mon, look alive! Thats already their rank!"
+      puts ""
+      puts "C'mon, look alive! Thats already their rank!".colorize(:yellow)
+      puts ""
     end
     
     # assign new rank to selected wish and save to db
@@ -375,6 +382,7 @@ class Cli
   end 
 
   def self.about_view(user)
+    
     # binding.pry
 
     # COMPLETE means at least three per position
