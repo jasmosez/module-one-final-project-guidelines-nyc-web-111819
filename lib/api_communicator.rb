@@ -19,7 +19,7 @@ def get_teams
 end
 
 def get_players(team_ids)
-  binding.pry
+  # binding.pry
   # Call team rosters. Return array of players
 
   url = "http://lookup-service-prod.mlb.com/json/named.roster_40.bam?team_id="
@@ -41,14 +41,14 @@ def get_players(team_ids)
   end
   
   # be sure to return player_ids 
-  binding.pry
+  # binding.pry
   player_data_hashes
 end
 
 
 
 def add_stats_to_player_hashes(player_data_hashes)
-  binding.pry
+  # binding.pry
   # get season hitting stats data by player id. Return as a hash, ready to store in db
   #takes in an array of hashes not player objects
   # In this instance, we are hard coding 2019. Could parse for interporlation, in the future 
