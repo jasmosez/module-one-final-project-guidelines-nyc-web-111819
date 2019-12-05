@@ -166,7 +166,7 @@ class Cli
   # Prompt user to select a player
   # Do we want this to be a multi-select
   clear_screen
-    selection = PROMPT.select(format_player_header, choices, per_page: 35)
+    selection = PROMPT.select(format_player_header, choices, per_page: 35, filter: true)
     
     # Insert validation to ensure we haven't already selected this player
 
@@ -375,10 +375,7 @@ class Cli
     player_wish.save  
     #takes in a player_id and returns the position you will assign it to  
     # re-render wishlist with changes
-    render_wishlist(user)
-    #re-call wishlist nav
-    wishlist_menu(user)
-    # binding.pry 
+    wishlist_view(user)
   end 
 
   def self.rerank_players(user)
@@ -424,10 +421,7 @@ class Cli
     player_wish.rank = new_rank
     player_wish.save
 
-    # re-render wishlist with changes
-    render_wishlist(user)
-    #re-call wishlist nav
-    wishlist_menu(user)
+   wishlist_view(user)
   end 
 
   def self.about_view(user)
