@@ -1,36 +1,29 @@
 class Cli
 
   def self.run
-    
     welcome     
     email = login_prompt #returns user inputted email
-    user = login_validation(email) # returns user object once successful
-    # binding.pry
-    
+    user = login_validation(email) # returns user object once successful    
     login_success(user)
-    
     while true 
-      # binding.pry
       primary_menu(user) 
     end
   end
   
   def self.welcome           
-                                                                                                                                                                                                              
+    clear_screen
+    ascii                                                                                                                                                                            
     puts "Hey, Slugger! Welcome to AllSTarzBaseball"
   end
 
   def self.login_prompt
-    
     email = PROMPT.ask("Email:")
   end
 
   def self.login_validation(email)
-    
     # returns current User instance or 'nil'
     
     until !!User.find_by(email: email) 
-    
       #prompt user response to missing email
       choice = PROMPT.select("Swing and a miss! We didn't find any sluggers by that email") do |menu|
           menu.choice "Register New Slugger Account"
@@ -68,12 +61,12 @@ class Cli
   def self.login_success(user)
     
      # returns current user instance 
+    puts ""
     puts "Welcome, #{user.name}"
     status_message(wishlist_status(user))
   end 
 
   def self.wishlist_status(user)
-    
     # if the users wishlist is empty, then the status will be "empty"
     # if the users wishlist has 3 players per position filled, the status will be "complete"
     # otherwise, "incomplete"
@@ -91,9 +84,6 @@ class Cli
   end 
 
   def self.complete?(wishlist)
-    
-
-    
     POSITION_HASH.values.reduce do |bool, position|
       players_in_position = wishlist.wishes.select do |wish| 
         wish.position == position 
@@ -103,32 +93,20 @@ class Cli
   end
 
   def self.status_message(status)
-    clear_screen
     case status
-    when "empty"
-      
-      puts ""
-      puts ""
+    
+    when "empty"  
       puts "Your list is empty!".colorize(:red)
       puts "Time to scout and build your list!"
-      puts ""
-      puts ""
+    
     when "incomplete"
-      
-      puts ""
-      puts ""
       puts "Your list is still in progress!".colorize(:yellow)
       puts "Remember: you need AT LEAST 3 prospects per position."
-      puts ""
-      puts ""
+    
     when "complete"
-      
-      puts ""
-      puts ""
       puts "Your list is ready!".colorize(:green) 
       puts "But, you can keep adding players or rearranging as you like."
-      puts ""
-      puts ""
+
     end
     
   end
@@ -138,7 +116,7 @@ class Cli
     # Primary Navigation Prompt
 
     puts ""
-    puts "MAIN MENU".colorize(:pink)  
+    puts "MAIN MENU".colorize(:green)  
       response = PROMPT.select("Where do you want to go?") do |menu|
           menu.choice "Browse and Select Players"
           menu.choice "View and Manage My List"
@@ -182,8 +160,29 @@ class Cli
   items = Player.where(position: position).order(h: :desc)
 
   items.each do |z|
-    #formatted string assign to key, player id assigned to value of choices hash
+    #formatted string assign to key, player id assigned to value of choices hash    
+   choices[format_player_data(z)] = z.id   
+  end 
+  # Prompt user to select a player
+  # Do we want this to be a multi-select
+  clear_screen
+    selection = PROMPT.select(format_player_header, choices, per_page: 35, filter: true)
     
+    # Insert validation to ensure we haven't already selected this player
+
+    # Assign selected player to wishlist
+    assign_player_to_wishlist(user, selection)
+    
+    # Prompt user to decide what to do next
+    # intermediate menu? or back to main menu
+
+  end 
+
+  def self.format_player_data(player)
+    # returns a string of formatted player data
+    z = player 
+    choices = {}
+
     #format NAME for columns
     multiplier = 25 - z.name.length 
     formatted_name = z.name + ' ' * multiplier
@@ -219,33 +218,31 @@ class Cli
       multiplier = 5 - string_ops.length 
       formatted_ops = string_ops + '0' * multiplier
     end
-
-    choices["#{formatted_name} | #{formatted_position} | #{formatted_h} | #{formatted_hr} | #{formatted_rbi} | #{formatted_avg} | #{formatted_ops} | #{z.team}"] = z.id   
+    "#{formatted_name} | #{formatted_position} | #{formatted_h} | #{formatted_hr} | #{formatted_rbi} | #{formatted_avg} | #{formatted_ops} | #{z.team}"
   end
 
-  # Prompt user to select a player
-  # Do we want this to be a multi-select
-    clear_screen
-    selection = PROMPT.select("Select Your Player | Position | Hits | Homeruns | RBI | AVG | OPS", choices, per_page: 35)
-    
-    # Insert validation to ensure we haven't already selected this player
+  def self.format_player_header
+    "Select Your Player          | Pos |  H  | HR  | RBI | AVG  |  OPS  | Team".colorize(:green)
+  end
 
-    # Assign selected player to wishlist
-    assign_player_to_wishlist(user, selection)
+  def self.assign_player_to_wishlist(user, player_id)
+    existing_wish = user.wishlists.first.wishes.find do |wish|
+      wish.player_id == player_id
+    end
     
-    # Prompt user to decide what to do next
-    # intermediate menu? or back to main menu
-
-  end 
-
-  def self.assign_player_to_wishlist(user, selection)
+    if !existing_wish
+      Wish.create(
+        player_id: player_id, 
+        wishlist_id: user.wishlists.first.id, 
+        position: assign_position(player_id),
+        rank: user.wishlists.first.wishes.length + 1
+        )
+    else
+      puts ""
+      puts "Woah. Slow down, Slugger! You've already got #{Player.find(player_id).name} on your list".colorize(:red)
     
-    Wish.create(
-      player_id: selection, 
-      wishlist_id: user.wishlists.first.id, 
-      position: assign_position(selection),
-      rank: user.wishlists.first.wishes.length + 1
-      )
+      end
+
   end 
 
   def self.assign_position(selection)
@@ -265,8 +262,10 @@ class Cli
     end 
 
     # transforming abbreviations to full position name
-    options = position_group.map do |position|
-      POSITION_HASH.key(position)
+    options = {}
+    position_group.each do |position|
+      options[POSITION_HASH.key(position)] = position 
+      
     end
 
     # prompt user to assign position and return it
@@ -277,7 +276,7 @@ class Cli
   end 
 
   def self.wishlist_view(user)
-    
+    clear_screen
     # Render wishlist 
     render_wishlist(user)
     wishlist_menu(user)
@@ -292,17 +291,28 @@ class Cli
       a.rank <=> b.rank
     }
     
-    puts "Player | Position | Hits | Homeruns | RBI | AVG | OPS"
+    # render standard header plus three extra spaces to allow for rank
+    puts format_player_header.sub(/\s\s/, "     ")
     
       sorted_wishes.each do |wish|
-        z = wish.player
-        puts "#{wish.rank}. #{z.name} | #{wish.position} | #{z.h} | #{z.hr} | #{z.rbi} | #{z.avg} | #{z.ops} | #{z.team}"
+        # ensure that wish position string segment takes up two chars
+        if wish.position.length == 1 
+          wish.position += " "
+        end 
+        
+        #format rank numbering so that columns are clean up thru three digit ranks
+        multiplier = 4 - wish.rank.to_s.length
+        formatted_rank = wish.rank.to_s + '.' + ' ' * multiplier
+        
+        # Print each player with rank using helper format. 
+        # Use Regex to swap in wish position for mlb player position
+        puts formatted_rank + format_player_data(wish.player).sub(/\|\s../, "| " + wish.position)
       end
   end
 
   def self.wishlist_menu(user)  
     puts ""
-    puts "WISHLIST MENU".colorize(:pink)
+    puts "WISHLIST MENU".colorize(:green)
     selection = PROMPT.select("What do you want to do with your list?") do |menu|
       # Re-order (change rank)
       menu.choice "Re-rank Player(s)"
@@ -345,8 +355,11 @@ class Cli
         wish.save
       end
     end 
-    # binding.pry 
+    
+    wishlist_view(user)
   end 
+
+
   def self.reassign_positions(user)
     
     wishes = user.wishlists.first.wishes
@@ -362,10 +375,7 @@ class Cli
     player_wish.save  
     #takes in a player_id and returns the position you will assign it to  
     # re-render wishlist with changes
-    render_wishlist(user)
-    #re-call wishlist nav
-    wishlist_menu(user)
-    # binding.pry 
+    wishlist_view(user)
   end 
 
   def self.rerank_players(user)
@@ -411,15 +421,15 @@ class Cli
     player_wish.rank = new_rank
     player_wish.save
 
-    # re-render wishlist with changes
-    render_wishlist(user)
-    #re-call wishlist nav
-    wishlist_menu(user)
+   wishlist_view(user)
   end 
 
   def self.about_view(user)
-    
+    clear_screen
     # binding.pry
+
+    puts "About AllSTarzBaseball..."
+    about_menu(user)
 
     # COMPLETE means at least three per position
     # Credits
@@ -427,8 +437,43 @@ class Cli
 
   end
 
+  def self.about_menu(user)
+    puts ""
+    puts "ABOUT MENU".colorize(:green)
+    selection = PROMPT.select("Alright. Now, get your head back in the game, Slugger!") do |menu|
+    
+      # Back to Main Menu
+      menu.choice "Back to Main Menu"
+    end
+
+    case selection 
+    when "Back to Main Menu"
+    end
+  end
+
   def self.clear_screen
     system 'clear'
+  end
+
+  def self.ascii
+    puts ""
+    puts ""
+    puts ""
+    puts ""
+
+    puts '       d8888 888 888  .d8888b. 88888888888                        888888b.                              888               888 888'.colorize(:red)
+    puts '      d88888 888 888 d88P  Y88b    888                            888  "88b                             888               888 888'.colorize(:red)
+    puts '     d88P888 888 888 Y88b.         888                            888  .88P                             888               888 888'.colorize(:red)
+    puts '    d88P 888 888 888  "Y888b.      888   8888b.  888d888 88888888 8888888K.   8888b.  .d8888b   .d88b.  88888b.   8888b.  888 888'.colorize(:white)
+    puts '   d88P  888 888 888     "Y88b.    888      "88b 888P"      d88P  888  "Y88b     "88b 88K      d8P  Y8b 888 "88b     "88b 888 888'.colorize(:white)
+    puts '  d88P   888 888 888       "888    888  .d888888 888       d88P   888    888 .d888888 "Y8888b. 88888888 888  888 .d888888 888 888'.colorize(:white)
+    puts ' d8888888888 888 888 Y88b  d88P    888  888  888 888      d88P    888   d88P 888  888      X88 Y8b.     888 d88P 888  888 888 888'.colorize(:blue)
+    puts 'd88P     888 888 888  "Y8888P"     888  "Y888888 888     88888888 8888888P"  "Y888888  88888P"  "Y8888  88888P"  "Y888888 888 888'.colorize(:blue)
+                                                                                                                                
+    puts ""
+    puts ""
+    puts ""
+    puts ""
   end
 
   # STRETCH METHODS
