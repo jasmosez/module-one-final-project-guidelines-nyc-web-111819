@@ -137,7 +137,7 @@ class Cli
     # Primary Navigation Prompt
 
     puts ""
-    puts "MAIN MENU".colorize(:pink)  
+    puts "MAIN MENU".colorize(:yellow)  
       response = PROMPT.select("Where do you want to go?") do |menu|
           menu.choice "Browse and Select Players"
           menu.choice "View and Manage My List"
@@ -246,14 +246,24 @@ class Cli
     "Select Your Player          | Pos |  H  | HR  | RBI | AVG  |  OPS  | Team"
   end
 
-  def self.assign_player_to_wishlist(user, selection)
+  def self.assign_player_to_wishlist(user, player_id)
+    existing_wish = user.wishlists.first.wishes.find do |wish|
+      wish.player_id == player_id
+    end
     
-    Wish.create(
-      player_id: selection, 
-      wishlist_id: user.wishlists.first.id, 
-      position: assign_position(selection),
-      rank: user.wishlists.first.wishes.length + 1
-      )
+    if !existing_wish
+      Wish.create(
+        player_id: player_id, 
+        wishlist_id: user.wishlists.first.id, 
+        position: assign_position(player_id),
+        rank: user.wishlists.first.wishes.length + 1
+        )
+    else
+      puts ""
+      puts "Woah. Slow down, Slugger! You've already got #{Player.find(player_id).name} on your list".colorize(:red)
+    
+      end
+
   end 
 
   def self.assign_position(selection)
@@ -323,7 +333,7 @@ class Cli
 
   def self.wishlist_menu(user)  
     puts ""
-    puts "WISHLIST MENU".colorize(:pink)
+    puts "WISHLIST MENU".colorize(:yellow)
     selection = PROMPT.select("What do you want to do with your list?") do |menu|
       # Re-order (change rank)
       menu.choice "Re-rank Player(s)"
