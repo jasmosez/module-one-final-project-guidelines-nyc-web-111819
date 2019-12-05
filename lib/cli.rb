@@ -181,8 +181,29 @@ class Cli
   items = Player.where(position: position).order(h: :desc)
 
   items.each do |z|
-    #formatted string assign to key, player id assigned to value of choices hash
+    #formatted string assign to key, player id assigned to value of choices hash    
+   choices[format_player_data(z)] = z.id   
+  end 
+  # Prompt user to select a player
+  # Do we want this to be a multi-select
+  clear_screen
+    selection = PROMPT.select(format_player_header, choices, per_page: 35)
     
+    # Insert validation to ensure we haven't already selected this player
+
+    # Assign selected player to wishlist
+    assign_player_to_wishlist(user, selection)
+    
+    # Prompt user to decide what to do next
+    # intermediate menu? or back to main menu
+
+  end 
+
+  def self.format_player_data(player)
+    # returns a string of formatted player data
+    z = player 
+    choices = {}
+
     #format NAME for columns
     multiplier = 25 - z.name.length 
     formatted_name = z.name + ' ' * multiplier
@@ -218,24 +239,12 @@ class Cli
       multiplier = 5 - string_ops.length 
       formatted_ops = string_ops + '0' * multiplier
     end
-
-    choices["#{formatted_name} | #{formatted_position} | #{formatted_h} | #{formatted_hr} | #{formatted_rbi} | #{formatted_avg} | #{formatted_ops} | #{z.team}"] = z.id   
+    "#{formatted_name} | #{formatted_position} | #{formatted_h} | #{formatted_hr} | #{formatted_rbi} | #{formatted_avg} | #{formatted_ops} | #{z.team}"
   end
 
-  # Prompt user to select a player
-  # Do we want this to be a multi-select
-    clear_screen
-    selection = PROMPT.select("Select Your Player | Position | Hits | Homeruns | RBI | AVG | OPS", choices, per_page: 35)
-    
-    # Insert validation to ensure we haven't already selected this player
-
-    # Assign selected player to wishlist
-    assign_player_to_wishlist(user, selection)
-    
-    # Prompt user to decide what to do next
-    # intermediate menu? or back to main menu
-
-  end 
+  def self.format_player_header
+    "Select Your Player          | Pos |  H  | HR  | RBI | AVG  |  OPS  | Team"
+  end
 
   def self.assign_player_to_wishlist(user, selection)
     
@@ -264,8 +273,10 @@ class Cli
     end 
 
     # transforming abbreviations to full position name
-    options = position_group.map do |position|
-      POSITION_HASH.key(position)
+    options = {}
+    position_group.each do |position|
+      options[POSITION_HASH.key(position)] = position 
+      
     end
 
     # prompt user to assign position and return it
@@ -291,11 +302,22 @@ class Cli
       a.rank <=> b.rank
     }
     
-    puts "Player | Position | Hits | Homeruns | RBI | AVG | OPS"
+    # render standard header plus three extra spaces to allow for rank
+    puts format_player_header.sub(/\s\s/, "     ")
     
       sorted_wishes.each do |wish|
-        z = wish.player
-        puts "#{wish.rank}. #{z.name} | #{wish.position} | #{z.h} | #{z.hr} | #{z.rbi} | #{z.avg} | #{z.ops} | #{z.team}"
+        # ensure that wish position string segment takes up two chars
+        if wish.position.length == 1 
+          wish.position += " "
+        end 
+        
+        #format rank numbering so that columns are clean up thru three digit ranks
+        multiplier = 4 - wish.rank.to_s.length
+        formatted_rank = wish.rank.to_s + '.' + ' ' * multiplier
+        
+        # Print each player with rank using helper format. 
+        # Use Regex to swap in wish position for mlb player position
+        puts formatted_rank + format_player_data(wish.player).sub(/\|\s../, "| " + wish.position)
       end
   end
 
@@ -344,8 +366,11 @@ class Cli
         wish.save
       end
     end 
-    # binding.pry 
+    
+    wishlist_view(user)
   end 
+
+
   def self.reassign_positions(user)
     
     wishes = user.wishlists.first.wishes
