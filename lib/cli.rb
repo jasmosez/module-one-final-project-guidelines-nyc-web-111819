@@ -1,23 +1,18 @@
 class Cli
 
   def self.run
-    
     welcome     
     email = login_prompt #returns user inputted email
-    user = login_validation(email) # returns user object once successful
-    # binding.pry
-    
+    user = login_validation(email) # returns user object once successful    
     login_success(user)
-    
     while true 
-      # binding.pry
       primary_menu(user) 
     end
   end
   
   def self.welcome           
     clear_screen
-    ascii                                                                                                                                                                                                          
+    ascii                                                                                                                                                                            
     puts "Hey, Slugger! Welcome to AllSTarzBaseball"
   end
 
@@ -26,11 +21,9 @@ class Cli
   end
 
   def self.login_validation(email)
-    
     # returns current User instance or 'nil'
     
     until !!User.find_by(email: email) 
-    
       #prompt user response to missing email
       choice = PROMPT.select("Swing and a miss! We didn't find any sluggers by that email") do |menu|
           menu.choice "Register New Slugger Account"
@@ -68,12 +61,12 @@ class Cli
   def self.login_success(user)
     
      # returns current user instance 
+    puts ""
     puts "Welcome, #{user.name}"
     status_message(wishlist_status(user))
   end 
 
   def self.wishlist_status(user)
-    
     # if the users wishlist is empty, then the status will be "empty"
     # if the users wishlist has 3 players per position filled, the status will be "complete"
     # otherwise, "incomplete"
@@ -91,9 +84,6 @@ class Cli
   end 
 
   def self.complete?(wishlist)
-    
-
-    
     POSITION_HASH.values.reduce do |bool, position|
       players_in_position = wishlist.wishes.select do |wish| 
         wish.position == position 
@@ -104,30 +94,19 @@ class Cli
 
   def self.status_message(status)
     case status
-    when "empty"
-      
-      puts ""
-      puts ""
+    
+    when "empty"  
       puts "Your list is empty!".colorize(:red)
       puts "Time to scout and build your list!"
-      puts ""
-      puts ""
+    
     when "incomplete"
-      
-      puts ""
-      puts ""
       puts "Your list is still in progress!".colorize(:yellow)
       puts "Remember: you need AT LEAST 3 prospects per position."
-      puts ""
-      puts ""
+    
     when "complete"
-      
-      puts ""
-      puts ""
       puts "Your list is ready!".colorize(:green) 
       puts "But, you can keep adding players or rearranging as you like."
-      puts ""
-      puts ""
+
     end
     
   end
@@ -137,7 +116,7 @@ class Cli
     # Primary Navigation Prompt
 
     puts ""
-    puts "MAIN MENU".colorize(:yellow)  
+    puts "MAIN MENU".colorize(:green)  
       response = PROMPT.select("Where do you want to go?") do |menu|
           menu.choice "Browse and Select Players"
           menu.choice "View and Manage My List"
@@ -243,7 +222,7 @@ class Cli
   end
 
   def self.format_player_header
-    "Select Your Player          | Pos |  H  | HR  | RBI | AVG  |  OPS  | Team"
+    "Select Your Player          | Pos |  H  | HR  | RBI | AVG  |  OPS  | Team".colorize(:green)
   end
 
   def self.assign_player_to_wishlist(user, player_id)
@@ -297,7 +276,7 @@ class Cli
   end 
 
   def self.wishlist_view(user)
-    
+    clear_screen
     # Render wishlist 
     render_wishlist(user)
     wishlist_menu(user)
@@ -333,7 +312,7 @@ class Cli
 
   def self.wishlist_menu(user)  
     puts ""
-    puts "WISHLIST MENU".colorize(:yellow)
+    puts "WISHLIST MENU".colorize(:green)
     selection = PROMPT.select("What do you want to do with your list?") do |menu|
       # Re-order (change rank)
       menu.choice "Re-rank Player(s)"
@@ -452,13 +431,30 @@ class Cli
   end 
 
   def self.about_view(user)
-    
+    clear_screen
     # binding.pry
+
+    puts "About AllSTarzBaseball..."
+    about_menu(user)
 
     # COMPLETE means at least three per position
     # Credits
     # For more advanced stats, check out these sites...
 
+  end
+
+  def self.about_menu(user)
+    puts ""
+    puts "ABOUT MENU".colorize(:green)
+    selection = PROMPT.select("Alright. Now, get your head back in the game, Slugger!") do |menu|
+    
+      # Back to Main Menu
+      menu.choice "Back to Main Menu"
+    end
+
+    case selection 
+    when "Back to Main Menu"
+    end
   end
 
   def self.clear_screen
