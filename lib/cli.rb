@@ -173,6 +173,9 @@ class Cli
     clear_screen
     choices = {}
 
+    # add a back to main menu option as first element of
+    choices["Back to Main Menu"] = "back"
+
     if position == "all"
       # given status on wishlist
       status_message(wishlist_status(user))
@@ -276,6 +279,12 @@ class Cli
   end
 
   def self.assign_player_to_wishlist(user, player_id)
+    #skip everything and let the methods run their course if selection was "Back to Main Menu"
+    if player_id == "back"
+      clear_screen
+      return
+    end
+    
     existing_wish = user.wishlists.first.wishes.find do |wish|
       wish.player_id == player_id
     end
