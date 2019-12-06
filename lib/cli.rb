@@ -85,8 +85,7 @@ class Cli
 
   def self.complete?(wishlist)
     # returns true if there are at least three players in every position
-    # NEED TO REMOVE OF
-    POSITION_HASH.values.reduce do |bool, position|
+    POSITION_HASH.values.reduce(true) do |bool, position|
       num_players = players_in_position(wishlist, position)
       bool = !!bool && num_players >= 3
     end
@@ -146,7 +145,6 @@ class Cli
     # Note that we are not offering the possibility to browse OF"
 
     options = POSITION_HASH
-
     options["All Players"] = "all"
     options["Back to Main Menu"] = "back"
 
