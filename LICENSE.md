@@ -1,3 +1,10 @@
+### This is a student project from the Flatiron School. 
+
+In addition to the license information below, we make use of this free API:
+- MLB API -> https://appac.github.io/mlb-data-api-docs/
+
+--------------------
+
 #Learn.co Educational Content License
 
 Copyright (c) 2015 Flatiron School, Inc

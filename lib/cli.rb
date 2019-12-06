@@ -477,19 +477,28 @@ class Cli
     clear_screen
     # binding.pry
 
-    puts "About AllSTarzBaseball..."
-    about_menu(user)
+    puts "About AllSTarzBaseball...".colorize(:green)
 
-    # COMPLETE means at least three per position
-    # Credits
-    # For more advanced stats, check out these sites...
+    puts "* AllSTarz Baseball is a service that will set you up for success in your upcoming Fantasy Baseball draft." 
+    puts "* Using the option to 'Browse and Select Players', simply create your 'Wishlist' of dream players." 
+    puts "* You can add as many players to your wishlist as you would like."
+    puts "* You need three players at each position for your list to be considered 'ready'." 
+    puts "* Select 'View and Manage Wishlist' to view their stats and continuously add/drop/re-rank your players to your heart's content." 
+    puts "* Ranking determines the order in wich you'll choose players (subject to availability, of course), so rank wisely!"
+    puts "* The player database is orginating from the MLB API."
+    puts "* Requires a terminal width of at least 130 chars"
+    puts ""
+    puts "* MLB API -> https://appac.github.io/mlb-data-api-docs/"
+    puts "* Contributions: James Schaffer, Sean Tarzy, Tim Rines"
+    puts ""
+    about_menu(user)
 
   end
 
   def self.about_menu(user)
     puts ""
     puts "ABOUT MENU".colorize(:green)
-    selection = PROMPT.select("Alright. Now, get your head back in the game, Slugger!") do |menu|
+    selection = PROMPT.select("Alright. Now, get back out there, Slugger!") do |menu|
     
       # Back to Main Menu
       menu.choice "Back to Main Menu"

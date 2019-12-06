@@ -1,3 +1,39 @@
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6iMQJ4Xmm4W73fU3S7X6QjoFUI-lidJivF8fYdKT9CkmYsEFF&s" title="ModuleOneProject:" alt="ModuleOneProject">
+
+# Flatiron School - Module One Project  
+Welcome to AllSTarz Baseball Fantasy Wishlist App!
+
+## Overview
+AllSTarz Baseball is a service that will set you up for success in your upcoming Fantasy Baseball draft. Using the option to "Browse and Select Players", simply create your "Wishlist" of dream players. You can add as many players to your wishlist as you would like. You need three players at each position for your list to be considered "ready". Select "View and Manage Wishlist" to view their stats and continuously add/drop/re-rank your players to your heart's content. Your ranking will determine the order in which you'll choose your players in your upcoming draft based on availability, so rank wisely! The player database is orginating from the MLB API. 
+
+## Setup
+Here are the steps to make sure it runs properly.  
+1.  Clone the repository
+2.  Open your terminal, cd into wherever you downloaded the repository
+3.  --bundle install
+4.  --rake db:migrate
+5.  --ruby bin/seed.rb
+6.  --ruby bin/run.rb
+
+## Usage
+Now you have our app open, get to building your wishlist!
+
+We keep track of your list of players and what positions you have assigned them to.  
+Outfielders as designated by MLB's data, can only be assigned to an outfield position. Same for infielders. Catchers can be Catchers and Pitchers can be Pitchers. Any player can be assigned as a Designated Hitter. In order to have a complete list, you must have 3 players in each position.  
+
+## Additional Notes
+- We have hardcoded the selection of MLB data from the 2019 regular season only, but this can be easily amended
+- In this version, each user has one and only one wishlist. But we have the data structure to expand to multiple wishlists per user
+- ASCII art used requires a terminal width of at least 130 chars
+
+## Credits
+- MLB API -> https://appac.github.io/mlb-data-api-docs/
+- Contributions: James Schaffer, Sean Tarzy, Tim Rines
+
+
+-----------------------
+
+
 # Module One Final Project Guidelines
 
 Congratulations, you're at the end of module one! You've worked crazy hard to get here and have learned a ton.
