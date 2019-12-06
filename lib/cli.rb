@@ -85,8 +85,7 @@ class Cli
 
   def self.complete?(wishlist)
     # returns true if there are at least three players in every position
-    # NEED TO REMOVE OF
-    POSITION_HASH.values.reduce do |bool, position|
+    POSITION_HASH.values.reduce(true) do |bool, position|
       num_players = players_in_position(wishlist, position)
       bool = !!bool && num_players >= 3
     end
@@ -98,14 +97,17 @@ class Cli
     when "empty"  
       puts "Your list is empty!".colorize(:red)
       puts "Time to scout and build your list!"
+      puts ""
     
     when "incomplete"
       puts "Your list is still in progress!".colorize(:yellow)
       puts "Remember: you need AT LEAST 3 prospects per position."
+      puts ""
     
     when "complete"
       puts "Your list is ready!".colorize(:green) 
       puts "But, you can keep adding players or rearranging as you like."
+      puts ""
 
     end
     
@@ -114,8 +116,6 @@ class Cli
   def self.primary_menu(user)
     
     # Primary Navigation Prompt
-
-    puts ""
     puts "MAIN MENU".colorize(:green)  
       response = PROMPT.select("Where do you want to go?") do |menu|
           menu.choice "Browse and Select Players"
@@ -145,7 +145,6 @@ class Cli
     # Note that we are not offering the possibility to browse OF"
 
     options = POSITION_HASH
-
     options["All Players"] = "all"
     options["Back to Main Menu"] = "back"
 
@@ -153,6 +152,7 @@ class Cli
     
     case response
     when "back"
+      clear_screen
       # no instructions will let the methods run their course and hit the end of the while loop in self.runand get us back to the main menu
     else
        # we're additing handling in self.player_view in order to test for "all" before calling the rest of the method as originally intended (just assuming it gets a position abbreviation string)
@@ -161,42 +161,44 @@ class Cli
   end
 
   def self.player_view(user, position)
-  # [see only one position-block at a time]
-  # what is the default sorting? == Hits Descending
-  # Are there additional sorting options == Not for MVP
-  # QUESTION: how to include a "back" option
-  
-  
-  # initialize new hash 
-  clear_screen
-  choices = {}
-
-  if position == "all"
-    # given status on wishlist
-    wishlist_status(user)
-    puts ""
-
-    # generate list of all players
-    items = Player.all.order(h: :desc)
-  else
-    # given status on wishlist / players needed in position
-    players_needed = 3 - players_in_position(user.wishlists.first, position)
-    if players_needed > 0
-      puts "You need #{players_needed} more players at #{POSITION_HASH.key(position)}.".colorize(:yellow)
-      puts ""
-    else
-      puts "You've got enough players at #{POSITION_HASH.key(position)}.".colorize(:red)
-      puts ""
-    end
+    # [see only one position-block at a time]
+    # what is the default sorting? == Hits Descending
+    # Are there additional sorting options == Not for MVP
+    # QUESTION: how to include a "back" option
     
+    
+    # initialize new hash 
+    clear_screen
+    choices = {}
+
+    # add a back to main menu option as first element of
+    choices["Back to Main Menu"] = "back"
+
+    if position == "all"
+      # given status on wishlist
+      status_message(wishlist_status(user))
+
+      # generate list of all players
+      items = Player.all.order(h: :desc)
+    else
+      # given status on wishlist / players needed in position
+      players_needed = 3 - players_in_position(user.wishlists.first, position)
+      if players_needed > 0
+        puts "You need #{players_needed} more player(s) at #{POSITION_HASH.key(position)}.".colorize(:yellow)
+        puts ""
+      else
+        puts "You've got enough players at #{POSITION_HASH.key(position)}.".colorize(:red)
+        puts ""
+      end
+      
     # generate the list of players playing position
     items = Player.where(position: position).order(h: :desc)
-  end
+    end
 
-  items.each do |z|
+    items.each do |z|
     #formatted string assign to key, player id assigned to value of choices hash    
-   choices[format_player_data(z)] = z.id   
-  end 
+      choices[format_player_data(z)] = z.id   
+    end 
   
     selection = PROMPT.select(format_player_header, choices, per_page: 35, filter: true)
     
@@ -275,6 +277,12 @@ class Cli
   end
 
   def self.assign_player_to_wishlist(user, player_id)
+    #skip everything and let the methods run their course if selection was "Back to Main Menu"
+    if player_id == "back"
+      clear_screen
+      return
+    end
+    
     existing_wish = user.wishlists.first.wishes.find do |wish|
       wish.player_id == player_id
     end
@@ -286,9 +294,11 @@ class Cli
         position: assign_position(player_id),
         rank: user.wishlists.first.wishes.length + 1
         )
+       clear_screen 
     else
       puts ""
       puts "Woah. Slow down, Slugger! You've already got #{Player.find(player_id).name} on your list".colorize(:red)
+      puts ""
     
       end
 
@@ -326,9 +336,14 @@ class Cli
 
   def self.wishlist_view(user)
     clear_screen
+
+    # given wishlist status
+    status_message(wishlist_status(user))
+
     # Render wishlist 
     render_wishlist(user)
     wishlist_menu(user)
+    clear_screen
   end
 
   def self.render_wishlist(user)
@@ -477,19 +492,29 @@ class Cli
     clear_screen
     # binding.pry
 
-    puts "About AllSTarzBaseball..."
-    about_menu(user)
+    puts "About AllSTarzBaseball...".colorize(:green)
 
-    # COMPLETE means at least three per position
-    # Credits
-    # For more advanced stats, check out these sites...
+    puts "* AllSTarz Baseball is a service that will set you up for success in your upcoming Fantasy Baseball draft." 
+    puts "* Using the option to 'Browse and Select Players', simply create your 'Wishlist' of dream players." 
+    puts "* You can add as many players to your wishlist as you would like."
+    puts "* You need three players at each position for your list to be considered 'ready'." 
+    puts "* Select 'View and Manage Wishlist' to view their stats and continuously add/drop/re-rank your players to your heart's content." 
+    puts "* Ranking determines the order in wich you'll choose players (subject to availability, of course), so rank wisely!"
+    puts "* The player database is orginating from the MLB API."
+    puts "* Requires a terminal width of at least 130 chars"
+    puts ""
+    puts "* MLB API -> https://appac.github.io/mlb-data-api-docs/"
+    puts "* Contributions: James Schaffer, Sean Tarzy, Tim Rines"
+    puts ""
+    about_menu(user)
+    clear_screen
 
   end
 
   def self.about_menu(user)
     puts ""
     puts "ABOUT MENU".colorize(:green)
-    selection = PROMPT.select("Alright. Now, get your head back in the game, Slugger!") do |menu|
+    selection = PROMPT.select("Alright. Now, get back out there, Slugger!") do |menu|
     
       # Back to Main Menu
       menu.choice "Back to Main Menu"
