@@ -98,14 +98,17 @@ class Cli
     when "empty"  
       puts "Your list is empty!".colorize(:red)
       puts "Time to scout and build your list!"
+      puts ""
     
     when "incomplete"
       puts "Your list is still in progress!".colorize(:yellow)
       puts "Remember: you need AT LEAST 3 prospects per position."
+      puts ""
     
     when "complete"
       puts "Your list is ready!".colorize(:green) 
       puts "But, you can keep adding players or rearranging as you like."
+      puts ""
 
     end
     
@@ -114,8 +117,6 @@ class Cli
   def self.primary_menu(user)
     
     # Primary Navigation Prompt
-
-    puts ""
     puts "MAIN MENU".colorize(:green)  
       response = PROMPT.select("Where do you want to go?") do |menu|
           menu.choice "Browse and Select Players"
@@ -153,6 +154,7 @@ class Cli
     
     case response
     when "back"
+      clear_screen
       # no instructions will let the methods run their course and hit the end of the while loop in self.runand get us back to the main menu
     else
        # we're additing handling in self.player_view in order to test for "all" before calling the rest of the method as originally intended (just assuming it gets a position abbreviation string)
@@ -161,42 +163,41 @@ class Cli
   end
 
   def self.player_view(user, position)
-  # [see only one position-block at a time]
-  # what is the default sorting? == Hits Descending
-  # Are there additional sorting options == Not for MVP
-  # QUESTION: how to include a "back" option
-  
-  
-  # initialize new hash 
-  clear_screen
-  choices = {}
-
-  if position == "all"
-    # given status on wishlist
-    wishlist_status(user)
-    puts ""
-
-    # generate list of all players
-    items = Player.all.order(h: :desc)
-  else
-    # given status on wishlist / players needed in position
-    players_needed = 3 - players_in_position(user.wishlists.first, position)
-    if players_needed > 0
-      puts "You need #{players_needed} more players at #{POSITION_HASH.key(position)}.".colorize(:yellow)
-      puts ""
-    else
-      puts "You've got enough players at #{POSITION_HASH.key(position)}.".colorize(:red)
-      puts ""
-    end
+    # [see only one position-block at a time]
+    # what is the default sorting? == Hits Descending
+    # Are there additional sorting options == Not for MVP
+    # QUESTION: how to include a "back" option
     
+    
+    # initialize new hash 
+    clear_screen
+    choices = {}
+
+    if position == "all"
+      # given status on wishlist
+      status_message(wishlist_status(user))
+
+      # generate list of all players
+      items = Player.all.order(h: :desc)
+    else
+      # given status on wishlist / players needed in position
+      players_needed = 3 - players_in_position(user.wishlists.first, position)
+      if players_needed > 0
+        puts "You need #{players_needed} more player(s) at #{POSITION_HASH.key(position)}.".colorize(:yellow)
+        puts ""
+      else
+        puts "You've got enough players at #{POSITION_HASH.key(position)}.".colorize(:red)
+        puts ""
+      end
+      
     # generate the list of players playing position
     items = Player.where(position: position).order(h: :desc)
-  end
+    end
 
-  items.each do |z|
+    items.each do |z|
     #formatted string assign to key, player id assigned to value of choices hash    
-   choices[format_player_data(z)] = z.id   
-  end 
+      choices[format_player_data(z)] = z.id   
+    end 
   
     selection = PROMPT.select(format_player_header, choices, per_page: 35, filter: true)
     
@@ -286,9 +287,11 @@ class Cli
         position: assign_position(player_id),
         rank: user.wishlists.first.wishes.length + 1
         )
+       clear_screen 
     else
       puts ""
       puts "Woah. Slow down, Slugger! You've already got #{Player.find(player_id).name} on your list".colorize(:red)
+      puts ""
     
       end
 
@@ -326,9 +329,14 @@ class Cli
 
   def self.wishlist_view(user)
     clear_screen
+
+    # given wishlist status
+    status_message(wishlist_status(user))
+
     # Render wishlist 
     render_wishlist(user)
     wishlist_menu(user)
+    clear_screen
   end
 
   def self.render_wishlist(user)
@@ -492,6 +500,7 @@ class Cli
     puts "* Contributions: James Schaffer, Sean Tarzy, Tim Rines"
     puts ""
     about_menu(user)
+    clear_screen
 
   end
 
