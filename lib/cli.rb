@@ -84,11 +84,11 @@ class Cli
   end 
 
   def self.complete?(wishlist)
+    # returns true if there are at least three players in every position
+    # NEED TO REMOVE OF
     POSITION_HASH.values.reduce do |bool, position|
-      players_in_position = wishlist.wishes.select do |wish| 
-        wish.position == position 
-      end
-      bool = !!bool && players_in_position.count >= 3
+      num_players = players_in_position(wishlist, position)
+      bool = !!bool && num_players >= 3
     end
   end
 
@@ -141,11 +141,23 @@ class Cli
  
 
   def self.select_position_menu(user)
-    
     clear_screen
     # Note that we are not offering the possibility to browse OF"
-    response = PROMPT.select("Which position(s) do you want to scout?", POSITION_HASH, per_page: 11)
-    player_view(user, response) 
+
+    options = POSITION_HASH
+
+    options["All Players"] = "all"
+    options["Back to Main Menu"] = "back"
+
+    response = PROMPT.select("Which position(s) do you want to scout?", POSITION_HASH, per_page: 15)
+    
+    case response
+    when "back"
+      # no instructions will let the methods run their course and hit the end of the while loop in self.runand get us back to the main menu
+    else
+       # we're additing handling in self.player_view in order to test for "all" before calling the rest of the method as originally intended (just assuming it gets a position abbreviation string)
+      player_view(user, response) 
+    end
   end
 
   def self.player_view(user, position)
@@ -156,27 +168,49 @@ class Cli
   
   
   # initialize new hash 
+  clear_screen
   choices = {}
-  items = Player.where(position: position).order(h: :desc)
+
+  if position == "all"
+    # given status on wishlist
+    wishlist_status(user)
+    puts ""
+
+    # generate list of all players
+    items = Player.all.order(h: :desc)
+  else
+    # given status on wishlist / players needed in position
+    players_needed = 3 - players_in_position(user.wishlists.first, position)
+    if players_needed > 0
+      puts "You need #{players_needed} more players at #{POSITION_HASH.key(position)}.".colorize(:yellow)
+      puts ""
+    else
+      puts "You've got enough players at #{POSITION_HASH.key(position)}.".colorize(:red)
+      puts ""
+    end
+    
+    # generate the list of players playing position
+    items = Player.where(position: position).order(h: :desc)
+  end
 
   items.each do |z|
     #formatted string assign to key, player id assigned to value of choices hash    
    choices[format_player_data(z)] = z.id   
   end 
-  # Prompt user to select a player
-  # Do we want this to be a multi-select
-  clear_screen
+  
     selection = PROMPT.select(format_player_header, choices, per_page: 35, filter: true)
     
-    # Insert validation to ensure we haven't already selected this player
-
     # Assign selected player to wishlist
     assign_player_to_wishlist(user, selection)
-    
-    # Prompt user to decide what to do next
-    # intermediate menu? or back to main menu
-
   end 
+
+  def self.players_in_position(wishlist, position)
+    # returns number of players in a given position on a given wishlist
+    players = wishlist.wishes.select do |wish| 
+      wish.position == position 
+    end
+    players.length
+  end
 
   def self.format_player_data(player)
     # returns a string of formatted player data
@@ -204,19 +238,34 @@ class Cli
     formatted_rbi = z.rbi.to_s + ' ' * multiplier
 
     #format AVG for columns
-    string_avg = z.avg.to_s.delete_prefix("0")
-    multiplier = 4 - string_avg.length 
-    formatted_avg = string_avg + '0' * multiplier
+    string_avg = z.avg.to_s
+    # Check for an empty string to avoid getting "0000"
+    if string_avg == ""
+      formatted_avg = "    "
+    else
+      string_avg = z.avg.to_s.delete_prefix("0")
+      multiplier = 4 - string_avg.length 
+      formatted_avg = string_avg + '0' * multiplier
+    end
     
     #format OPS for columns
     string_ops = z.ops.to_s
-    if string_ops[0] == "0"
-      string_ops = string_ops.delete_prefix("0")
-      multiplier = 4 - string_ops.length 
-      formatted_ops = ' ' + string_ops + '0' * multiplier
+    # Check for an empty string to avoid getting "00000"
+    if string_ops == ""
+      formatted_ops = "     "
     else
-      multiplier = 5 - string_ops.length 
-      formatted_ops = string_ops + '0' * multiplier
+      # case where OPS is less than 1.0
+      if string_ops[0] == "0"
+        string_ops = string_ops.delete_prefix("0")
+        # add zeros for floats that extend less than three digits past the decimal
+        multiplier = 4 - string_ops.length 
+        formatted_ops = ' ' + string_ops + '0' * multiplier
+      else
+      # case where OPS is greater than 1.0
+        # add zeros for floats that extend less than three digits past the decimal
+        multiplier = 5 - string_ops.length 
+        formatted_ops = string_ops + '0' * multiplier
+      end
     end
     "#{formatted_name} | #{formatted_position} | #{formatted_h} | #{formatted_hr} | #{formatted_rbi} | #{formatted_avg} | #{formatted_ops} | #{z.team}"
   end
